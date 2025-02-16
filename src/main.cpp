@@ -2,6 +2,9 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <stb_image.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include <shaders/shader_s.h>
 
@@ -16,6 +19,7 @@ const unsigned int SCR_HEIGHT = 600;
 
 int main()
 {
+
     // glfw: initialize and configure
     // ------------------------------
     glfwInit();
@@ -96,8 +100,8 @@ int main()
     glGenTextures(1, &texture1);
     glBindTexture(GL_TEXTURE_2D, texture1);
     // set the texture wrapping parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);	// set texture wrapping to GL_REPEAT (default wrapping method)
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);	// set texture wrapping to GL_REPEAT (default wrapping method)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     // set texture filtering parameters
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -148,12 +152,23 @@ int main()
     // or set it via the texture class
     ourShader.setInt("texture2", 1);
 
+    
+
 
 
     // render loop
     // -----------
     while (!glfwWindowShouldClose(window))
     {
+
+        glm::vec4 vec(1.0f, 0.0f, 0.0f, 1.0f);
+        // 译注：下面就是矩阵初始化的一个例子，如果使用的是0.9.9及以上版本
+        // 下面这行代码就需要改为:
+        // glm::mat4 trans = glm::mat4(1.0f)
+        // 之后将不再进行提示
+       
+
+        
         // input
         // -----
         processInput(window);
@@ -172,6 +187,22 @@ int main()
         // render container
         ourShader.use();
         glBindVertexArray(VAO);
+
+        glm::mat4 trans = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
+        trans = glm::translate(trans, glm::vec3(0.5, -0.5, 0.0));
+        trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0, 0.0, 1.0));
+        unsigned int transformLoc = glGetUniformLocation(ourShader.ID, "transform");
+        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+
+
+        trans = glm::mat4(1.0f); // make sure to initialize matrix to identity matrix first
+        trans = glm::translate(trans, glm::vec3(-0.5, 0.5, 0.0));
+        float scaleAmount = static_cast<float>(sin(glfwGetTime()));
+        trans = glm::scale(trans, glm::vec3(scaleAmount, scaleAmount, scaleAmount));
+        trans = glm::rotate(trans, (float)glfwGetTime(), glm::vec3(0.0, 0.0, 1.0));
+        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(trans));
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
